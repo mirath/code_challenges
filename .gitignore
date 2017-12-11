@@ -1,3 +1,4 @@
 *.o
 *.hi
 hsout
+__pycache__
