@@ -1,6 +1,7 @@
 #!/bin/python3
 
 import sys
+import queue
 from itertools import islice
 
 test_m = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]]
@@ -50,9 +51,33 @@ def following(pos, A, m, n):
     if pos[0] == A and pos[1] > A:
         return (pos[0],pos[1]-1)
 
-def nth(th, A, m, n):
+def rotate_axel(r, A, m, n, matrix):
     p=(A,A)
-    while th > 0:
+    q = queue.Queue()
+    while r > 0:
+        q.put(matrix[p[0]][p[1]])
         p=following(p, A, m, n)
-    return p
+        r -= 1
+
+    i = 2*(m-2*A) + 2*(n-2-2*A)
+    while i > 0:
+        val = q.get()
+        q.put(matrix[p[0]][p[1]])
+        matrix[p[0]][p[1]] = val
+        p=following(p, A, m, n)
+        i -= 1
+
+    return matrix
+
+def rotate(shift, m, n, matrix):
+    axels = int(min(m, n) / 2)
+    for a in range(axels):
+        rotate_axel(shift, a, m, n, matrix)
+    return matrix
+
+
+matrix, m, n, r = io()
+rotate(r, m, n, matrix)
+for row in matrix:
+    print(" ".join(map(str, row)))
 
