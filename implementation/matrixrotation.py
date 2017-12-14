@@ -54,14 +54,20 @@ def following(pos, A, m, n):
 def rotate_axel(r, A, m, n, matrix):
     p=(A,A)
     q = queue.Queue()
+    elements = 2*(m-2*A) + 2*(n-2-2*A)
+    r = r % elements
+
+    if r == 0:
+        return matrix
+
     while r > 0:
         q.put(matrix[p[0]][p[1]])
         p=following(p, A, m, n)
         r -= 1
 
-    i = 2*(m-2*A) + 2*(n-2-2*A)
+    i = elements
     while i > 0:
-        val = q.get()
+        val = q.get(False)
         q.put(matrix[p[0]][p[1]])
         matrix[p[0]][p[1]] = val
         p=following(p, A, m, n)
