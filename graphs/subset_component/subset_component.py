@@ -1,27 +1,51 @@
 #!python3
 
 import os
+import cProfile, pstats, io
 from itertools import combinations as combinations_generator
 
 def ones(n):
-    ones = 0
+    ons = 0
     while n > 0:
-        ones += n & 1
+        ons += n & 1
         n = n >> 1
-    return ones
+    return ons
 
 class DisjointElement(object): #pylint: disable=too-few-public-methods
     '''
     Class that holds the information of an element of a disjoint set
     This should really only be a dictionary/tuple, but the readibility of the code would suffer
     '''
-
     def __init__(self, elem):
         self.element = elem
         self.parent = None
         self.rank = 0
         self.component = elem
 
+class Parents(object):
+    def __init__(self, disjoint_set):
+        self.disjoint_set = disjoint_set
+        self.current_numbers = None
+        self.ds_len = 0
+        self.current = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        while self.current < self.ds_len and \
+              self.current_numbers[self.current].parent != self.current_numbers[self.current]:
+            self.current += 1
+        if self.current < self.ds_len:
+            self.current += 1
+            return self.current_numbers[self.current-1]
+        else:
+            raise StopIteration
+
+    def reset(self):
+        self.current = 0
+        self.current_numbers = self.disjoint_set.current_numbers
+        self.ds_len = len(self.current_numbers)
 
 class DisjointSet(object):
     '''
@@ -33,13 +57,15 @@ class DisjointSet(object):
     def __init__(self, elements):
         self.lookup = {}
         self.set = []
+        self.current_numbers = None
+        self.parents = None
         for elem in elements:
             disjoint_elem = DisjointElement(elem)
             self.lookup[elem] = disjoint_elem
             self.set.append(disjoint_elem)
 
-
     def init_combination(self, numbers):
+        self.current_numbers = [self.lookup[n] for n in numbers]
         for number in numbers:
             disjoint_elem = self.lookup[number]
             disjoint_elem.parent = disjoint_elem
@@ -51,32 +77,23 @@ class DisjointSet(object):
             disjoint_elem.component = disjoint_elem.element
 
     def components(self):
-        return 64-sum([ones(e.component)-1 for e in self.set if e.parent == e])
+        ret = 64
+        for e in self.current_numbers:
+            if e.parent == e:
+                ret -= ones(e.component)-1
+        return ret
 
-    def find(self, element):
-        '''
-        Find function for users to interact with.
-        The actual find function is recursive and this function sets its initial args properly
-        '''
-
-        disjoint_elem = self.lookup[element]
-        return self.__find(disjoint_elem, []).element
-
-
-    def __find(self, disjoint_elem, path): #pylint: disable=missing-docstring
+    def __find(self, disjoint_elem): #pylint: disable=missing-docstring
         if disjoint_elem.parent != disjoint_elem:
-            path.append(disjoint_elem)
-            return self.__find(disjoint_elem.parent, path)
-
-        for element in path:
-            element.parent = disjoint_elem
+            root = self.__find(disjoint_elem.parent)
+            disjoint_elem.parent = root
+            return root
 
         return disjoint_elem
 
-
     def union(self, element_1, element_2): #pylint: disable=missing-docstring
-        de1 = self.__find(self.lookup[element_1], [])
-        de2 = self.__find(self.lookup[element_2], [])
+        de1 = self.__find(self.lookup[element_1])
+        de2 = self.__find(self.lookup[element_2])
 
         if de1.rank > de2.rank:
             de2.parent = de1
@@ -117,8 +134,18 @@ if __name__ == '__main__':
 
     d = list(map(int, input().rstrip().split()))
 
+    pr = cProfile.Profile()
+    pr.enable()
     components = findConnectedComponents(d)
-
+    pr.disable()
+    s = io.StringIO()
+    sortby = 'cumulative'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats()
+    print(s.getvalue())
+    '''
+    components = findConnectedComponents(d)
+    '''
     print(components+64) # +64 because the empty set will keep every node isolated
 
     #fptr.write(str(components+64) + '\n')
