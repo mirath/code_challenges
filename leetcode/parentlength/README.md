@@ -23,9 +23,8 @@ Output: 0
 ```
 
 Constraints:
-
-`0 <= s.length <= 3 * 10^4`
-`s[i]` is `'('`, or `')'`.
+- `0 <= s.length <= 3 * 10^4`
+- `s[i]` is `'('`, or `')'`.
 
 ## URL
 https://leetcode.com/problems/longest-valid-parentheses/description/
