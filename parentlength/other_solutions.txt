@@ -1,0 +1,73 @@
+Timer unit: 1e-09 s
+
+class Solution:
+    def longestValidParentheses(self, s: str) -> int:
+        ans, stack = 0, [-1]
+        for i in range(len(s)):
+            if s[i] == '(':
+                stack.append(i)
+            else:
+                stack.pop()
+                if len(stack) == 0:
+                    stack.append(i)
+                else:
+                    ans = max(ans, i - stack[-1])
+        return ans
+
+
+class Solution:
+    def longestValidParentheses(self, s: str) -> int:
+        stack = [-1]
+        res = 0
+        for index,char in enumerate(s):
+            if char == '(':
+                stack.append(index)
+            else:
+                last_index = stack.pop()
+                if not stack:
+                    stack.append(index)
+                else:
+                    res = max(res, index - stack[-1])
+        return res
+
+class Solution:
+    def longestValidParentheses(self, s: str) -> int:
+        #each valid region is seperated by invalid regions, so we just have to compare the lengths of all the valid regions
+        #the valid regions are defined as those whose graph of "(" - ")" is greater than or equal to zero
+        #the zero points define the regions we need to actually compare.
+
+        maxlength = 0
+        l_count = 0
+        leng = 0
+        for i,p in enumerate(s):
+            if p == "(":
+                l_count += 1
+                leng += 1
+            if p == ")":
+                l_count -= 1
+                leng += 1
+            if l_count == 0:
+                maxlength = max(maxlength, leng)
+            if l_count <0:
+                leng = 0
+                l_count = 0
+
+        #now need to run it backwards from the end!
+        backmaxlength = 0
+        l_count = 0
+        leng = 0
+
+        for i in range(len(s)-1,-1, -1):
+            p = s[i]
+            if p == ")": #reverse which one matters
+                l_count += 1
+                leng += 1
+            if p == "(":
+                l_count -= 1
+                leng += 1
+            if l_count <0:
+                backmaxlength = max(backmaxlength, leng-1) #subtract one cause we went under
+                leng = 0
+                l_count = 0
+
+        return max(maxlength,backmaxlength)
